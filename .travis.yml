@@ -1,0 +1,22 @@
+language: python
+python:
+    - "2.7"
+
+install:
+    - pushd package
+    - pip install --extra-index-url https://testpypi.python.org/pypi -r requirements.txt
+    - pip install -r test_requirements.txt
+    - popd
+    - pushd breaking_point_shell/src
+    - pip install -r test_requirements.txt
+    - popd
+    - pip install coveralls
+
+script:
+    - pushd package
+    - python setup.py develop
+    - popd
+    - python runtests.py --with-coverage  --cover-package=package
+
+after_success:
+    - coveralls
