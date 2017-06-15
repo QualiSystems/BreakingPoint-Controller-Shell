@@ -24,15 +24,16 @@ class BreakingPointControllerDriver(ResourceDriverInterface):
         """
         return AutoLoadDetails([], [])
 
-    def load_config(self, context, config_file_location):
+    def load_config(self, context, config_file_location, network_file_location):
         """
         Load configuration file and reserve ports
         :param context: 
         :param config_file_location: 
+        :param network_file_location:
         :return: 
         """
         with self._runners_pool.actual_runner(context) as runner:
-            return runner.load_configuration(config_file_location.replace('"', ''))
+            return runner.load_configuration(config_file_location.replace('"', ''), network_file_location.replace('"',''))
 
     # def load_pcap(self, context, pcap_file_location):
     #     with self._runners_pool.actual_runner(context) as runner:
@@ -90,3 +91,4 @@ class BreakingPointControllerDriver(ResourceDriverInterface):
 
         with self._runners_pool.actual_runner(context) as runner:
             return runner.close()
+

@@ -41,9 +41,10 @@ class TestDriver(TestCase):
         result = Mock()
         self._runner.load_configuration.return_value = result
         config_file = '"test/test"'
-        self.assertIs(self._instance.load_config(self._context, config_file), result)
+        network_file = '"test/network"'
+        self.assertIs(self._instance.load_config(self._context, config_file, network_file), result)
         self._runners_pool.actual_runner.assert_called_once_with(self._context)
-        self._runner.load_configuration.assert_called_once_with(config_file.strip('"'))
+        self._runner.load_configuration.assert_called_once_with(config_file.strip('"'), network_file.strip('"'))
 
     def test_start_traffic(self):
         result = Mock()
