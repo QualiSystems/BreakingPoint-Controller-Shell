@@ -1,11 +1,22 @@
 import re
 
-from mock import Mock, patch, PropertyMock
-from unittest2 import TestCase
+from mock import Mock, patch, PropertyMock, call
+from unittest2 import TestCase, skip
 
 from bp_controller.runners.bp_test_runner import BPTestRunner
 from cloudshell.tg.breaking_point.rest_api.rest_json_client import RestClientUnauthorizedException
 from cloudshell.tg.breaking_point.runners.exceptions import BPRunnerException
+
+
+class _TestContextManager(object):
+    def __init__(self, instance):
+        self.instance = instance
+
+    def __enter__(self):
+        return self.instance
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class TestBPTestRunner(TestCase):
@@ -167,35 +178,50 @@ class TestBPTestRunner(TestCase):
         self.assertIs(self._instance._port_reservation_helper, port_reservation_helper)
         port_reservation_helper_class.assert_called_once_with(session_context_manager, cs_reservation_details, logger)
 
+    @patch('bp_controller.runners.bp_test_runner.StringIO')
+    @patch('bp_controller.runners.bp_test_runner.basename')
+    @patch('bp_controller.runners.bp_test_runner.open')
     @patch('bp_controller.runners.bp_test_runner.BPTestRunner._test_configuration_file_flow', new_callable=PropertyMock)
     @patch('bp_controller.runners.bp_test_runner.BPTestRunner._port_reservation_helper', new_callable=PropertyMock)
     @patch('bp_controller.runners.bp_test_runner.ElementTree')
-    def test_load_configuration(self, element_tree_class, port_reservation_helper_prop, configuration_file_flow_prop):
+    def test_load_configuration_with_network(self, element_tree_class, port_reservation_helper_prop,
+                                             configuration_file_flow_prop, open_func, basename_func, string_io):
         port_reservation_helper = Mock()
         configuration_file_flow = Mock()
         port_reservation_helper_prop.return_value = port_reservation_helper
         configuration_file_flow_prop.return_value = configuration_file_flow
         test_name = Mock()
-        configuration_file_flow.load_configuration.return_value = test_name
-        parse_file_mock = Mock()
+        test_node = Mock()
         find_mock = Mock()
         test_model = Mock()
-        element_tree_class.parse.return_value = parse_file_mock
-        parse_file_mock.getroot.return_value = find_mock
+        element_tree_class.parse.return_value = test_node
+        test_node.getroot.return_value = find_mock
         find_mock.find.return_value = test_model
         network_name = Mock()
         test_model.get.return_value = network_name
         interface = Mock()
         test_model.findall.return_value = [interface]
         interface.get.return_value = '3'
-        file_path = Mock()
-        self._instance.load_configuration(file_path)
-        configuration_file_flow.load_configuration.assert_called_once_with(file_path)
+        test_file_path = Mock()
+        test_file_name = Mock()
+        network_file_path = Mock()
+        network_file_name = Mock()
+        network_name = Mock()
+        basename_func.side_effect = [network_file_name, test_file_name]
+        test_file_io = Mock()
+        string_io.return_value = test_file_io
+        network_file_inst = Mock()
+        configuration_file_flow.load_file.side_effect = [network_name, test_name]
+        open_func.return_value = _TestContextManager(network_file_inst)
+        self._instance.load_configuration(test_file_path, network_file_path)
+        load_file_calls = [call(network_file_name, network_file_inst), call(test_file_name, test_file_io), ]
+        configuration_file_flow.load_file.assert_has_calls(load_file_calls)
         self.assertIs(self._instance._test_name, test_name)
-        element_tree_class.parse.assert_called_once_with(file_path)
-        parse_file_mock.getroot.assert_called_once_with()
-        find_mock.find.assert_called_once_with('testmodel')
-        test_model.get.assert_called_once_with('network')
+        element_tree_class.parse.assert_called_once_with(test_file_path)
+        test_node.getroot.assert_called_once_with()
+        find_calls = [call('testmodel'), call('testmodel'), call('testmodel')]
+        find_mock.find.assrt_gas_calls(find_calls)
+        # test_model.get.assert_called_once_with('network')
         test_model.findall.assert_called_once_with('interface')
         interface.get.assert_called_once_with('number')
         port_reservation_helper.reserve_ports.assert_called_once_with(network_name, [3])

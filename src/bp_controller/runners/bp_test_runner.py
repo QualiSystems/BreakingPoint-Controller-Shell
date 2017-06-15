@@ -1,5 +1,9 @@
 import csv
 import json
+
+from cStringIO import StringIO
+from os.path import basename
+
 from bp_controller.helpers.port_reservation_helper import PortReservationHelper
 import re
 
@@ -151,17 +155,25 @@ class BPTestRunner(BPRunner):
                                                                    self.logger)
         return self.__port_reservation_helper
 
-    def load_configuration(self, file_path):
+    def load_configuration(self, test_file_path, network_file_path=None):
         """
         Upload configuration file and reserve ports
-        :param file_path: 
+        :param test_file_path: BP test file path
+        :param network_file_path: BP Network neighborhood file path
         :return: 
         """
-        self._test_name = self._test_configuration_file_flow.load_configuration(file_path)
-        test_model = ElementTree.parse(file_path).getroot().find('testmodel')
-        network_name = test_model.get('network')
+        test_node = ElementTree.parse(test_file_path).getroot()
+        if network_file_path is not None:
+            with open(network_file_path, 'rb') as network_file:
+                network_name = self._test_configuration_file_flow.load_file(basename(network_file_path),
+                                                                            network_file)
+                test_node.find('testmodel').set('network', network_name)
+        else:
+            network_name = test_node.find('testmodel').get('network')
+        self._test_name = self._test_configuration_file_flow.load_file(basename(test_file_path), StringIO(
+            ElementTree.tostring(test_node)))
         interfaces = []
-        for interface in test_model.findall('interface'):
+        for interface in test_node.find('testmodel').findall('interface'):
             interfaces.append(int(interface.get('number')))
         self._port_reservation_helper.reserve_ports(network_name, interfaces)
 

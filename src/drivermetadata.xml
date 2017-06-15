@@ -9,6 +9,9 @@
                 <Parameter Name="config_file_location" Type="String" Mandatory="True"
                            DisplayName="Breaking Point config file"
                            Description="Full path to Breaking Point test configuration file - bpt"/>
+                <Parameter Name="network_file_location" Type="String" Mandatory="False"
+                           DisplayName="Breaking Point Network Neighborhood file"
+                           Description="Full path to Breaking Point Network Neighborhood file - bpt"/>
             </Parameters>
         </Command>
         <!--<Command Name="load_pcap" DisplayName="Load Pcap" Description="Upload pcap file">-->

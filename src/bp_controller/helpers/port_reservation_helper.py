@@ -95,7 +95,9 @@ class PortReservationHelper(object):
         self._logger.debug('BP test interfaces {}'.format(bp_test_interfaces))
         for int_number in sorted(interfaces):
             bp_interface = bp_test_interfaces.get(int_number, None)
-            if bp_interface and bp_interface in cs_reserved_ports:
+            if bp_interface is None:
+                raise BPException(self.__class__.__name__, 'Test interfaces do not match network interfaces')
+            if bp_interface in cs_reserved_ports:
                 self._logger.debug('Associating interface {}'.format(bp_interface))
                 reservation_order.append(cs_reserved_ports[bp_interface])
             else:

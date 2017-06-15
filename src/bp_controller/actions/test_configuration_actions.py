@@ -15,20 +15,19 @@ class TestConfigurationActions(object):
         self._rest_service = rest_service
         self._logger = logger
 
-    def import_test(self, test_file_path):
+    def import_file(self, name, file_obj):
         """
         Upload test file to the BP controller
-        :param test_name:
-        :type test_name: str
-        :param test_file:
-        :type test_file: file
+        :param name:
+        :type name: basestring
+        :param file_obj:
+        :type file_obj: file
         :return:
         """
-        self._logger.debug('Importing test {}'.format(test_file_path))
+        self._logger.debug('Importing file'.format())
         uri = '/api/v1/bps/upload'
         json_data = {'force': True}
-        file_name = basename(test_file_path)
-        files = {'file': (file_name, open(test_file_path, 'rb'))}
+        files = {'file': (name, file_obj)}
         data = self._rest_service.request_post_files(uri, json_data, files)
         result = data
         return result
