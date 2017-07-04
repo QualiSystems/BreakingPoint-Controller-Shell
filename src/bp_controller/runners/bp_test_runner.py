@@ -1,22 +1,20 @@
 import csv
+import io
 import json
 import os
-
-from bp_controller.flows.bp_download_test_file_flow import BPDownloadTestFileFlow
-from bp_controller.helpers.port_reservation_helper import PortReservationHelper
 import re
-
-import io
 from xml.etree import ElementTree
 
+from bp_controller.flows.bp_download_test_file_flow import BPDownloadTestFileFlow
 from bp_controller.flows.bp_load_configuration_file_flow import BPLoadConfigurationFileFlow
 from bp_controller.flows.bp_load_pcap_file_flow import BPLoadPcapFileFlow
 from bp_controller.flows.bp_results_flow import BPResultsFlow
 from bp_controller.flows.bp_statistics_flow import BPStatisticsFlow
 from bp_controller.flows.bp_test_execution_flow import BPTestExecutionFlow
 from bp_controller.helpers.bp_cs_reservation_details import BPCSReservationDetails
-from bp_controller.helpers.quali_rest_api_helper import QualiAPIHelper, create_quali_api_instance
-from cloudshell.tg.breaking_point.rest_api.rest_json_client import RestClientUnauthorizedException
+from bp_controller.helpers.port_reservation_helper import PortReservationHelper
+from bp_controller.helpers.quali_rest_api_helper import create_quali_api_instance
+from bp_controller.helpers.test_file_helper import TestFileHelper
 from cloudshell.tg.breaking_point.runners.bp_runner import BPRunner
 from cloudshell.tg.breaking_point.runners.exceptions import BPRunnerException
 
@@ -269,20 +267,10 @@ class BPTestRunner(BPRunner):
         return "Please check attachments for results"
 
     def get_test_file(self, test_name):
-        test_files_location = self.context.resource.attributes.get('Test Files Location')
-        if not test_files_location:
-            raise BPRunnerException(self.__class__.__name__, "Test Files Location attribute is not defined")
-        if not os.path.exists(test_files_location) or os.access(test_files_location, os.W_OK) is not True:
-            raise BPRunnerException(self.__class__.__name__,
-                                    'The location of the test files "{}" does not exist or is not writable'.format(
-                                        test_files_location))
-        reservation_files = os.path.join(test_files_location, self.context.reservation.reservation_id)
-        if not os.path.exists(reservation_files):
-            os.makedirs(reservation_files)
-        test_file_path = os.path.join(reservation_files, test_name + '.bpt', )
         test_file_content = self._download_test_file_flow.download_test_file(test_name)
-        with open(test_file_path, 'w') as f:
-            f.write(test_file_content)
+        test_helper = TestFileHelper(test_name, test_file_content, self.context)
+        # test_helper.modify_test_content()
+        test_file_path = test_helper.save_test_content_to_the_file()
         return test_file_path
 
     def close(self):
@@ -290,6 +278,5 @@ class BPTestRunner(BPRunner):
         Destroy
         :return: 
         """
-        reservation_id = self.context.reservation.reservation_id
-        self.logger.debug('Close session for reservation ID: '.format(reservation_id))
+        self.logger.debug('Close session for the reservation ID: '.format(self.context.reservation.reservation_id))
         self._port_reservation_helper.unreserve_ports()
