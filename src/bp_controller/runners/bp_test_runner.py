@@ -1,22 +1,21 @@
 import csv
+import io
 import json
 import os
-
-from bp_controller.flows.bp_download_test_file_flow import BPDownloadTestFileFlow
-from bp_controller.helpers.port_reservation_helper import PortReservationHelper
 import re
-
-import io
 from xml.etree import ElementTree
 
+from bp_controller.flows.bp_download_test_file_flow import BPDownloadTestFileFlow
 from bp_controller.flows.bp_load_configuration_file_flow import BPLoadConfigurationFileFlow
 from bp_controller.flows.bp_load_pcap_file_flow import BPLoadPcapFileFlow
 from bp_controller.flows.bp_results_flow import BPResultsFlow
 from bp_controller.flows.bp_statistics_flow import BPStatisticsFlow
 from bp_controller.flows.bp_test_execution_flow import BPTestExecutionFlow
 from bp_controller.helpers.bp_cs_reservation_details import BPCSReservationDetails
-from bp_controller.helpers.quali_rest_api_helper import QualiAPIHelper, create_quali_api_instance
-from cloudshell.tg.breaking_point.rest_api.rest_json_client import RestClientUnauthorizedException
+from bp_controller.helpers.port_reservation_helper import PortReservationHelper
+from bp_controller.helpers.quali_rest_api_helper import create_quali_api_instance
+from cloudshell.shell.core.context_utils import get_resource_address, get_attribute_by_name
+from cloudshell.tg.breaking_point.rest_api.rest_session_credentials import RestSessionCredentials
 from cloudshell.tg.breaking_point.runners.bp_runner import BPRunner
 from cloudshell.tg.breaking_point.runners.exceptions import BPRunnerException
 
@@ -29,7 +28,12 @@ class BPTestRunner(BPRunner):
         :param logger:
         :param api:
         """
-        super(BPTestRunner, self).__init__(context, logger, api)
+
+        self.context = context
+        self.api = api
+        self.logger = logger
+        super(BPTestRunner, self).__init__(self._session_credentials_from_context(), logger)
+
         self._test_id = None
         self._test_name = None
 
@@ -41,34 +45,38 @@ class BPTestRunner(BPRunner):
         self.__reservation_details = None
         self.__port_reservation_helper = None
 
-    @BPRunner.context.setter
-    def context(self, value):
-        """
-        Override setter for context
-        :param value: 
-        :return: 
-        """
-        BPRunner.context.fset(self, value)
-        self._cs_reservation_details.context = value
+    def _session_credentials_from_context(self):
+        return RestSessionCredentials(get_resource_address(self.context),
+                                      get_attribute_by_name('User', self.context),
+                                      self.api.DecryptPassword(
+                                          get_attribute_by_name('Password', self.context)).Value)
 
-    @BPRunner.logger.setter
-    def logger(self, value):
+    def set_context(self, value):
         """
-        Override setter for logger
-        :param value: 
-        :return: 
+        Context setter
+        :param value:
+        :return:
         """
-        BPRunner.logger.fset(self, value)
+        self.context = value
+        self._cs_reservation_details.context = value
+        self._set_session_credentials(self._session_credentials_from_context())
+
+    def set_logger(self, value):
+        """
+        Logger setter
+        :param value:
+        :return:
+        """
+        self.logger = value
         self._cs_reservation_details.logger = value
 
-    @BPRunner.api.setter
-    def api(self, value):
+    def set_api(self, value):
         """
-        Override setter for api
+        Api setter
         :param value: 
         :return: 
         """
-        BPRunner.api.fset(self, value)
+        self.api = value
         self._cs_reservation_details.api = value
 
     @property
