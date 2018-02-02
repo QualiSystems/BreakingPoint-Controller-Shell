@@ -14,7 +14,6 @@ from bp_controller.flows.bp_test_execution_flow import BPTestExecutionFlow
 from bp_controller.helpers.bp_cs_reservation_details import BPCSReservationDetails
 from bp_controller.helpers.port_reservation_helper import PortReservationHelper
 from bp_controller.helpers.quali_rest_api_helper import create_quali_api_instance
-from cloudshell.shell.core.context_utils import get_resource_address, get_attribute_by_name
 from cloudshell.tg.breaking_point.rest_api.rest_session_credentials import RestSessionCredentials
 from cloudshell.tg.breaking_point.runners.bp_runner import BPRunner
 from cloudshell.tg.breaking_point.runners.exceptions import BPRunnerException
@@ -32,7 +31,6 @@ class BPTestRunner(BPRunner):
         self.context = context
         self.api = api
         self.logger = logger
-        super(BPTestRunner, self).__init__(self._session_credentials_from_context(), logger)
 
         self._test_id = None
         self._test_name = None
@@ -44,12 +42,12 @@ class BPTestRunner(BPRunner):
         self.__download_test_file_flow = None
         self.__reservation_details = None
         self.__port_reservation_helper = None
+        super(BPTestRunner, self).__init__(self._session_credentials(), logger)
 
-    def _session_credentials_from_context(self):
-        return RestSessionCredentials(get_resource_address(self.context),
-                                      get_attribute_by_name('User', self.context),
-                                      self.api.DecryptPassword(
-                                          get_attribute_by_name('Password', self.context)).Value)
+    def _session_credentials(self):
+        return RestSessionCredentials(self._resource_address,
+                                      self._username,
+                                      self._password)
 
     def set_context(self, value):
         """
@@ -59,7 +57,7 @@ class BPTestRunner(BPRunner):
         """
         self.context = value
         self._cs_reservation_details.context = value
-        self._set_session_credentials(self._session_credentials_from_context())
+        self._set_session_credentials(self._session_credentials())
 
     def set_logger(self, value):
         """
