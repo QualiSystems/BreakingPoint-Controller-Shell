@@ -3,12 +3,10 @@
 
 import re
 
-from cloudshell.tg.breaking_point.bp_exception import BPException
-
 
 class BPCSReservationDetails(object):
     PORT_FAMILY = ['Port', 'Virtual Port']
-    CHASSIS_FAMILY = ['Traffic Generator Chassis', 'Virtual Traffic Generator Chassis']
+    CHASSIS_FAMILY = ['Traffic Generator Chassis', 'Virtual Traffic Generator Chassis', 'CS_TrafficGeneratorChassis']
     PORT_ATTRIBUTE = 'Logical Name'
     USERNAME_ATTRIBUTE = 'User'
     PASSWORD_ATTRIBUTE = 'Password'
@@ -17,6 +15,9 @@ class BPCSReservationDetails(object):
         self._context = context
         self._logger = logger
         self._api = api
+
+        self.__chassis_resource = None
+        self.__chassis_resource_details = None
 
     @property
     def context(self):
@@ -32,6 +33,8 @@ class BPCSReservationDetails(object):
 
     @api.setter
     def api(self, value):
+        self.__chassis_resource = None
+        self.__chassis_resource_details = None
         self._api = value
 
     @property
@@ -42,19 +45,40 @@ class BPCSReservationDetails(object):
     def logger(self, value):
         self._logger = value
 
-    def get_chassis_address(self):
-        for resource in self._get_reservation_details().ReservationDescription.Resources:
-            if resource.ResourceFamilyName in self.CHASSIS_FAMILY:
-                chassis_address = resource.FullAddress
-                self.logger.debug('Chassis address {}'.format(chassis_address))
-                return chassis_address
-        raise BPException(self.__class__.__name__, 'Cannot find {0} in this reservation'.format(self.CHASSIS_FAMILY))
+    @property
+    def _chassis_resource(self):
+        if not self.__chassis_resource:
+            for resource in self._get_reservation_details().ReservationDescription.Resources:
+                if resource.ResourceFamilyName in self.CHASSIS_FAMILY:
+                    self.__chassis_resource = resource
+                    break
+        if self.__chassis_resource:
+            return self.__chassis_resource
+        raise Exception(self.__class__.__name__, 'Cannot find chassis resource in the reservation')
 
-    def _get_chassis_name(self):
-        for resource in self._get_reservation_details().ReservationDescription.Resources:
-            if resource.ResourceFamilyName in self.CHASSIS_FAMILY:
-                return resource.Name
-        raise BPException(self.__class__.__name__, 'Cannot find {0} in this reservation'.format(self.CHASSIS_FAMILY))
+    @property
+    def _chassis_resource_details(self):
+        if not self.__chassis_resource_details:
+            self.__chassis_resource_details = self.api.GetResourceDetails(self._chassis_resource_name)
+        if self.__chassis_resource_details:
+            return self.__chassis_resource_details
+        raise Exception(self.__class__.__name__,
+                        'Cannot find resource details for resource {}'.format(self._chassis_resource_name))
+
+    @property
+    def _chassis_resource_name(self):
+        return self._chassis_resource.Name
+
+    @property
+    def _chassis_resource_model(self):
+        return self._chassis_resource.Model
+
+    @property
+    def _chassis_resource_family(self):
+        return self._chassis_resource.ResourceFamilyName
+
+    def get_chassis_address(self):
+        return self._chassis_resource.FullAddress
 
     def _get_reservation_details(self):
         self.logger.debug('API instance: {}'.format(self.api))
@@ -76,21 +100,18 @@ class BPCSReservationDetails(object):
         self.logger.debug('Chassis ports {}'.format(reserved_ports))
         return reserved_ports
 
-    @staticmethod
-    def _find_attribute(attribute_name, attribute_list):
-        for attribute in attribute_list:
-            if attribute.Name == attribute_name:
+    def _get_attribute(self, attribute_name):
+        for attribute in self._chassis_resource_details.ResourceAttributes:
+            new_gen_attr_name = '{resource_model}.{attribute_name}'.format(resource_model=self._chassis_resource_model,
+                                                                           attribute_name=attribute_name)
+            self.logger.debug('Attr: {0}, {1}'.format(new_gen_attr_name, attribute.Name))
+            if attribute.Name == attribute_name or attribute.Name == new_gen_attr_name:
                 return attribute.Value
 
     def get_chassis_user(self):
-        details = self.api.GetResourceDetails(self._get_chassis_name())
-        username = self._find_attribute(self.USERNAME_ATTRIBUTE, details.ResourceAttributes)
-        self.logger.debug('Chassis username {}'.format(username))
-        return username
+        return self._get_attribute(self.USERNAME_ATTRIBUTE)
 
     def get_chassis_password(self):
-        details = self.api.GetResourceDetails(self._get_chassis_name())
-        encrypted_password = self._find_attribute(self.PASSWORD_ATTRIBUTE, details.ResourceAttributes)
-        chassis_password = self.api.DecryptPassword(encrypted_password).Value
-        self.logger.debug('Chassis Password {}'.format(chassis_password))
-        return chassis_password
+
+        encrypted_password = self._get_attribute(self.PASSWORD_ATTRIBUTE)
+        return self.api.DecryptPassword(encrypted_password).Value
