@@ -71,7 +71,7 @@ class BPCSReservationDetails(object):
 
     @property
     def _chassis_resource_model(self):
-        return self._chassis_resource.Model
+        return self._chassis_resource.ResourceModelName
 
     @property
     def _chassis_resource_family(self):
@@ -101,10 +101,9 @@ class BPCSReservationDetails(object):
         return reserved_ports
 
     def _get_attribute(self, attribute_name):
+        new_gen_attr_name = '{resource_model}.{attribute_name}'.format(resource_model=self._chassis_resource_model,
+                                                                       attribute_name=attribute_name)
         for attribute in self._chassis_resource_details.ResourceAttributes:
-            new_gen_attr_name = '{resource_model}.{attribute_name}'.format(resource_model=self._chassis_resource_model,
-                                                                           attribute_name=attribute_name)
-            self.logger.debug('Attr: {0}, {1}'.format(new_gen_attr_name, attribute.Name))
             if attribute.Name == attribute_name or attribute.Name == new_gen_attr_name:
                 return attribute.Value
 
