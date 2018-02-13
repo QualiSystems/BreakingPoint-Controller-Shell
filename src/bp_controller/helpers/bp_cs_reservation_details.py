@@ -6,7 +6,9 @@ import re
 
 class BPCSReservationDetails(object):
     PORT_FAMILY = ['Port', 'Virtual Port']
-    CHASSIS_FAMILY = ['Traffic Generator Chassis', 'Virtual Traffic Generator Chassis', 'CS_TrafficGeneratorChassis']
+    PORT_FAMILY_NEW_GEN = ['CS_TrafficGeneratorPort', 'CS_TrafficGeneratorVirtualPort']
+    CHASSIS_FAMILY = ['Traffic Generator Chassis', 'Virtual Traffic Generator Chassis']
+    CHASSIS_FAMILY_NEW_GEN = ['CS_TrafficGeneratorChassis', 'CS_VirtualTrafficGeneratorChassis']
     PORT_ATTRIBUTE = 'Logical Name'
     USERNAME_ATTRIBUTE = 'User'
     PASSWORD_ATTRIBUTE = 'Password'
@@ -49,7 +51,7 @@ class BPCSReservationDetails(object):
     def _chassis_resource(self):
         if not self.__chassis_resource:
             for resource in self._get_reservation_details().ReservationDescription.Resources:
-                if resource.ResourceFamilyName in self.CHASSIS_FAMILY:
+                if resource.ResourceFamilyName in self.CHASSIS_FAMILY or resource.ResourceFamilyName in self.CHASSIS_FAMILY_NEW_GEN:
                     self.__chassis_resource = resource
                     break
         if self.__chassis_resource:
@@ -90,11 +92,15 @@ class BPCSReservationDetails(object):
         reserved_ports = {}
         port_pattern = r'{}/M(?P<module>\d+)/P(?P<port>\d+)'.format(self.get_chassis_address())
         for resource in self._get_reservation_details().ReservationDescription.Resources:
-            if resource.ResourceFamilyName in self.PORT_FAMILY:
+            if resource.ResourceFamilyName in self.PORT_FAMILY or resource.ResourceFamilyName in self.PORT_FAMILY_NEW_GEN:
                 result = re.search(port_pattern, resource.FullAddress)
                 if result:
+                    if resource.ResourceFamilyName in self.PORT_FAMILY_NEW_GEN:
+                        logical_name_attr = '{0}.{1}'.format(resource.ResourceFamilyName, self.PORT_ATTRIBUTE)
+                    else:
+                        logical_name_attr = self.PORT_ATTRIBUTE
                     logical_name = self.api.GetAttributeValue(resourceFullPath=resource.Name,
-                                                              attributeName=self.PORT_ATTRIBUTE).Value
+                                                              attributeName=logical_name_attr).Value
                     if logical_name:
                         reserved_ports[logical_name.lower()] = (result.group('module'), result.group('port'))
         self.logger.debug('Chassis ports {}'.format(reserved_ports))
