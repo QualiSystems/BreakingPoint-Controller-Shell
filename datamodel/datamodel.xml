@@ -42,11 +42,6 @@
 
     <ResourceFamilies>
         <ResourceFamily Description="" IsService="true" Name="Traffic Generator Controller" ServiceType="Regular">
-            <AttachedAttributes>
-                <AttachedAttribute Name="Test Files Location" IsOverridable="true" IsLocal="true" UserInput="true">
-                    <AllowedValues/>
-                </AttachedAttribute>
-            </AttachedAttributes>
             <Models/>
             <Categories>
                 <Category>Applications</Category>
