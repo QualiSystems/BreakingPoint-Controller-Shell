@@ -1,10 +1,3 @@
-# BreakingPoint-Controller-Shell
-![alt tag](https://travis-ci.org/QualiSystems/BreakingPoint-Controller-Shell.svg?branch=dev)
-[![Coverage Status](https://coveralls.io/repos/github/QualiSystems/BreakingPoint-Controller-Shell/badge.svg?branch=dev)](https://coveralls.io/github/QualiSystems/BreakingPoint-Controller-Shell?branch=dev)
-[![PyPI version](https://badge.fury.io/py/BreakingPoint-Controller-Shell.svg)](https://badge.fury.io/py/BreakingPoint-Controller-Shell)
-[![Dependency Status](https://dependencyci.com/github/QualiSystems/BreakingPoint-Controller-Shell/badge)](https://dependencyci.com/github/QualiSystems/BreakingPoint-Controller-Shell)
-[![Stories in Ready](https://badge.waffle.io/QualiSystems/BreakingPoint-Controller-Shell.svg?label=ready&title=Ready)](http://waffle.io/QualiSystems/BreakingPoint-Controller-Shell)
-
 ![](https://github.com/stsuberi/SaraTest/blob/master/cloudshell_logo.png)
 
 # Ixia BreakingPoint 1G Shells 
@@ -51,7 +44,7 @@ For detailed information about the shell’s structure and attributes, see the [
 ▪ BreakingPoint VE
 
 ### Requirements
-Release: **Ixia BreakingPoint 1G shells version 1.2.2**
+Release: **Ixia BreakingPoint 1G shells**
 
 ▪ CloudShell version: 7.0 and above
 
@@ -59,7 +52,7 @@ Release: **Ixia BreakingPoint 1G shells version 1.2.2**
 
 ## Data Model
 
-The shell's data model includes all shell metadata, famiies, and attributes.
+The shell's data model includes all shell metadata, families, and attributes.
 
 **BreakingPoint Chassis Families and Models**
 
@@ -81,19 +74,19 @@ The chassis attribute names and types are listed in the following table:
 |Name|String||CloudShell resource display name.|
 |Address|String||Resource address (address of the device).|
 |Folder|String|Root|CloudShell folder in which to place the resource. Use the search bar to quickly find the desired folder.|
-|Visibility|Lookup|Family Default (Everyone)|Visibility determines who can see the resource in the diagram, search pane, and **Inventory** dashboard.  By default the visibility is defined in the resource family and can be changed for a specific resource.<br>Possible values: **Family Default (Everyone)**, **Admin only**, and **Everyone**.|
-|Remote Connection|Lookup|Family Default (Enable)|Remote connection determines if can remotely connect to the resource. By default the Remote Connection is defined in the resource family and can be changed for a specific resource.<br> Possible values: **Family Default (Enable)**, **Enable**, and **Disable**.|
+|Visibility|Lookup|Family Default (Everyone)|Visibility determines who can see the resource in the diagram, search pane, and **Inventory** dashboard.  By default, visibility is defined in the resource family and can be changed for a specific resource.<br>Possible values: **Family Default (Everyone)**, **Admin only**, and **Everyone**.|
+|Remote Connection|Lookup|Family Default (Enable)|Remote connection determines if you can remotely connect to the resource. By default, the remote connection is defined in the resource family and can be changed for a specific resource.<br> Possible values: **Family Default (Enable)**, **Enable**, and **Disable**.|
 |User|String||Admin user on the device.|
 |Password|Password||Password for Admin user on the device.|
-|Client Install Path|String||The path in which the traffic client is installed on the Execution Server. For example *C:/Program Files (x86)/Ixia/IxOS/6.90-EA*.|
-|Controller Group|String||The name of the controller group that the traffic generator is associated with or the group(s) (comma-separated) the traffic controller is part of.|
-|Model|String||The device model.<br>This information is typically used for abstract resource filtering.|
+|Client Install Path|String||Path in which the traffic client is installed on the Execution Server. For example *C:/Program Files (x86)/Ixia/IxOS/6.90-EA*.|
+|Controller Group|String||Name of the controller group that the traffic generator is associated with or the group(s) (comma-separated) the traffic controller is part of.|
+|Model|String||Device model.<br>This information is typically used for abstract resource filtering.|
 |Power Management|Boolean|Enabled|Used by the power management orchestration, if enabled, to determine whether to automatically manage the device power status.|
 |Serial Number|String||Serial number of the device.|
-|Server Description|String||The full description of the server. <br>Usually includes the OS, exact firmware version, and additional characteristics of the device.|
-|Supported Applications|String||Comma-separated list of traffic applications supported by this traffic generator. <br>For example *IxLoad,IxNetwork*.|
-|Vendor|String||The vendor name.|
-|Version|String||The firmware version of the resource.|
+|Server Description|String||Full description of the server. <br>Usually includes the OS, exact firmware version, and additional characteristics of the device.|
+|Supported Applications|String||Comma-separated list of traffic applications supported by this traffic generator. For example *IxLoad,IxNetwork*.|
+|Vendor|String||Vendor name.|
+|Version|String||Firmware version of the resource.|
 
 **BreakingPoint Controller Attributes**
 
@@ -104,7 +97,7 @@ The controller attribute names and types are listed in the following table:
 |Test Files Location|String|Location for test related files.|
 
 ### Automation
-This section describes the automation (drivers) associated with the data model. The shell’s driver is provided as part of the shell package. There are two types of automation processes, Autoload and Resource. Autoload is executed when creating the resource in the Inventory dashboard, while resource commands are run in the Sandbox, providing that the resource has been discovered and is online.
+This section describes the automation (drivers) associated with the data model. The shell’s driver is provided as part of the shell package. There are two types of automation processes, Autoload and Resource. Autoload is executed when creating the resource in the **Inventory** dashboard, while resource commands are run in the sandbox.
 
 For Traffic Generator shells, commands are configured and executed from the controller service in the sandbox, with the exception of the Autoload command, which is executed when creating the resource.
 
@@ -120,12 +113,12 @@ The following commands are associated with a model inside the shell:
 
 |Command|Description|
 |:-----|:-----|
-|Load Configuration|Load configuration file prepared by your admin. The load configuration file includes the settings to run the traffic test, for example, packet size, number of packets to send in parallel, interval at which to send packet batches, etc. The file also reserves the necessary ports. <br>**Note**: The load configuration file must be accessible from the Execution Server, see [Traffic Generators Overview](http://help.quali.com/Online%20Help/9.0/Portal/Content/CSP/LAB-MNG/Trffc-Gens.htm?Highlight=traffic%20generator).|
-|Start Traffic|Start the test to generate and send traffic to the DUT according to the settings provided in the configuration file.|
-|Stop Traffic|Stop running the test to stop sending traffic from the traffic generator.|
-|Get Result|Get the test result file and attach it to the sandbox.|
-|Get Statistics|Get real time statistics of the traffic test in either JSON or CSV format. <br>Set the command's inputs as follows: <br>▪ **View Name**: Type of statistics to return. For example, Port Statistics, Traffic Item Statistics, Flow Statistics, etc. The types available may differ depending on the traffic generator. <br>▪ **Output Type (Enum)**: **JSON** or **CSV**. JSON prints the statistics to the sandbox's output, which is useful for API calls that can use the output, while CSV attaches a CSV file with the test's statistics to the sandbox.|
-|Get Test File|Download the test file to the location specified in the **Test Files Location** attribute defined when you added the service to your blueprint.|
+|Load Configuration|Loads the configuration file prepared by your Admin. The load configuration file includes the settings to run the traffic test, for example, packet size, number of packets to send in parallel, interval at which to send packet batches, etc. The file also reserves the necessary ports. <br>**Note**: The load configuration file must be accessible from the Execution Server, see [Traffic Generators Overview](http://help.quali.com/Online%20Help/9.0/Portal/Content/CSP/LAB-MNG/Trffc-Gens.htm?Highlight=traffic%20generator).|
+|Start Traffic|Starts a test to generate and send traffic to the DUT, according to the settings provided in the configuration file.|
+|Stop Traffic|Stops running the test to stop sending traffic from the traffic generator.|
+|Get Result|Gets the test result file and attaches it to the sandbox.|
+|Get Statistics|Gets real time statistics of the traffic test in either JSON or CSV format. <br>Set the command's inputs as follows: <br>▪ **View Name**: Type of statistics to return. For example, Port Statistics, Traffic Item Statistics, Flow Statistics, etc. The types may differ depending on the traffic generator. <br>▪ **Output Type (Enum)**: **JSON** or **CSV**. JSON prints the statistics to the sandbox's output, which is useful for API calls that can use the output; while CSV attaches a CSV file with the test's statistics to the sandbox.|
+|Get Test File|Downloads the test file to the location specified in the **Test Files Location** attribute defined when you added the service to your blueprint.|
 
 ### Downloading the Shell
 The BreakingPoint 1G shells are available from the [Quali Community Integrations](https://community.quali.com/integrations) page. 
@@ -227,8 +220,8 @@ You can also modify existing resources, see [Managing Resources in the Inventory
 |:---|:---|:---|
 |User|String|Admin user on the device.|
 |Password|Password|Password for Admin user on the device.|
-|Client Install Path|String|The path in which the traffic client is installed on the Execution Server. For example *C:/Program Files (x86)/Ixia/IxOS/6.90-EA*.|
-|Controller Group|String|The name of the controller group that the traffic generator is associated with or the group(s) (comma-separated) the traffic controller is part of.|
+|Client Install Path|String|Path in which the traffic client is installed on the Execution Server. For example *C:/Program Files (x86)/Ixia/IxOS/6.90-EA*.|
+|Controller Group|String|Name of the controller group that the traffic generator is associated with or the group(s) (comma-separated) the traffic controller is part of.|
 |Power Management|Boolean|Used by the power management orchestration, if enabled, to determine whether to automatically manage the device power status. Enabled by default.|
 |Supported Applications|String|Comma-separated list of traffic applications supported by this traffic generator. <br>For example *IxLoad,IxNetwork*.|
   6. Click **Continue**.
@@ -244,13 +237,13 @@ This section explains how to update your Python dependencies folder. This is req
 
 2. Extract the zip file to the suitable offline package folder(s). 
 
-3. Restart any execution server that has a live instance of the relevant driver or script. This requires running the Execution Server's configuration wizard, as explained in the [Configure the Execution Server](http://help.quali.com/doc/9.0/CS-Install/content/ig/configure%20cloudshell%20products/cfg-ts-exec-srver.htm?Highlight=configure%20the%20execution%20server) topic of the CloudShell Suite Installation guide. 
+3. Terminate the shell’s instance, as explained [here](http://help.quali.com/Online%20Help/9.0/Portal/Content/CSP/MNG/Mng-Exctn-Srv-Exct.htm#Terminat).  
 
 ### Updating online Python dependencies
 In online mode, the execution server automatically downloads and extracts the appropriate dependencies file to the online Python dependencies repository every time a new instance of the driver or script is created.
 
 **To update online Python dependencies:**
-* If there is a live instance of the shell's driver or script, restart the execution server, as explained above. If an instance does not exist, the execution server will download the Python dependencies the next time a command of the driver or script runs.
+* If there is a live instance of the shell's driver or script, terminate the shell’s instance, as explained [here](http://help.quali.com/Online%20Help/9.0/Portal/Content/CSP/MNG/Mng-Exctn-Srv-Exct.htm#Terminat). If an instance does not exist, the execution server will download the Python dependencies the next time a command of the driver or script runs.
 
 
 ## Typical Workflows
@@ -266,9 +259,13 @@ Workflow 1 - *Creating a new blueprint*
    * Click the **App/Services** tab and add the **BreakingPointController** service.
    * Specify the attribute **Test Files Location**, where test files will be downloaded.
    
-3. Add teardown script, which runs the driver command `cleanup_reservation` when the reservation ends. This command releases ports which were used by the sandbox. 
-   * Go to the **Scripts** management page **Manage>Scripts>Environment**, click **Add New Script** and choose the **Cleanup Reservation.zip** file. Click **Edit** for the new added script and change **Script Type** to **Teardown**.
-   * Return to the blueprint and open properties, **Blueprint>Properties**. In the **Driver** section select **Python Setup & Teardown**, add **Estimated teardown duration** 1 min., then click **Add Script** and chose **Cleanup Reservation** from the list. 
+3. Add a teardown script, which runs the driver command `cleanup_reservation` when the reservation ends. This command releases ports which were used by the sandbox. 
+   * Go to the **Scripts** management page **Manage>Scripts>Environment**.
+   * Click **Add New Script** and choose the **Cleanup Reservation.zip** file. 
+   * Click **Edit** for the new added script and change **Script Type** to **Teardown**.
+   * Return to the blueprint and open properties, **Blueprint>Properties**. 
+   * In the **Driver** section, select **Python Setup & Teardown**, add **Estimated teardown duration** 1 min.
+   * Click **Add Script** and chose **Cleanup Reservation** from the list. 
    * Click **Update** to save changes.
 
 Workflow 2 - *Getting a test file with network configuration*
